@@ -1,3 +1,3 @@
-# CourseProject
+# Stack Overflow - Smart Insights
 
-Please fork this repository and paste the github link of your fork on Microsoft CMT. Detailed instructions are on Coursera under Week 1: Course Project Overview/Week 9 Activities.
+Improve Stack Overflow through a Chome extension by suggesting relevant library/function/etc. documentation based on the question content & target language, and provide other external content such as related YouTube videos (by # of views), Medium articles, research papers, and tutorials.
