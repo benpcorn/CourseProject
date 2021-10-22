@@ -34,14 +34,17 @@ For each topic, the general sentiment will be measured using the NLTK or TextBlo
 #### Chrome Extension
 The topics and topic sentiment will be displayed in-line on the Product Detail Page (PDP) on Amazon.com through a Google Chrome Extension. The UI will consist of a summary view and ingress point below the star rating and a larger widget above the "Top reviews" section using the same HTML components and CSS styling that the Amazon site uses for a native experience.
 
-#### Languages
+#### Result Caching (Stretch Goal)
+Due to the compute resources needed for this solution and the desire to provide a near real-time solution, caching of previous results should be implemented for each product that has been processed through the pipeline. The cache should have a short TTL (e.g., 30-60 days) to ensure the analysis remains accurate and up-to-date. AWS S3 could be used to store the results as JSON.
+
+### Languages
 - Extension: HTML, CSS, JavaScript
 - Text Mining: Javascript
 - Text Processing: Python
 - LDA: Python
 - Sentiment Analysis: Python
 
-#### Milestones and Workload
+### Milestones and Workload
 
 ### References
 
