@@ -1,4 +1,4 @@
-# Amazon Product Review Analysis Widget (Chrome Extension)
+# Amazon Product Review Analysis (Chrome Extension) | Intelligent Browsing
 
 ### Team Members
 - Benjamin Corn (bcorn2@illinois.edu) | Team Leader
@@ -21,15 +21,15 @@ The insights above will be automatically delivered directly on the Amazon Produc
 Amazon doesn't have an API to retrieve reviews, so a scraping approach will be taken. Amazon is known to block IPs if they suspect them of scraping, so a client-facing solution executed in the user's browser by the extension is preferred. Puppeteer + Node.js or ScrapingBee will be considered. Scraped review data will be cleaned up and sent to an AWS Lambda to perform the subsequent analysis steps.
 
 #### Review Text Processing
-The raw reviews will be tokenized, stopwords removed, lemmatized, and stemmed using the NLTK and gensim libraries. Finally, we will create a bag of words from the reviews and our corpus.
+The raw reviews will be tokenized, stopwords removed, lemmatized, and stemmed using the NLTK and gensim libraries through an AWS Lambda function. Finally, we will create a bag of words from the reviews and our corpus.
 
 #### Topic Grouping (Modeling) with LDA
-To provide a good user-experience, there is a need to provide our analysis quickly on the Product Detail Page on Amazon. Depending on the performance of LDA libraries, a tradeoff of accuracy for speed may need to be made. Two of the more popular libraries for LDA using Python are Sklearn and Gensim. Gensim provides more flexibility and the benefit of using GPUs, but GPUs would require a server architecture such as vast.ai or Amazon EC2 vs. using a serverless solution like AWS Lambdas. A technical evaluation between libraries will be completed during the project.
+To provide a good user-experience, there is a need to provide our analysis with low latency on the Product Detail Page on Amazon. Depending on the performance of LDA libraries, a tradeoff of accuracy for speed may need to be made. Two of the more popular libraries for LDA using Python are Sklearn and Gensim. Gensim provides more flexibility and the benefit of using GPUs, but GPUs would require a server architecture such as vast.ai or Amazon EC2 vs. using a serverless solution like AWS Lambdas. A technical evaluation between libraries will be completed during the project.
 
 The output of this step will be a set of topics derived from the reviews. 
 
 #### Sentiment Analysis
-For each topic, the general sentiment will be measured using the NLTK or TextBlob Python library. This will be executed on an AWS Lambda.
+For each topic, the general sentiment of the reviews will be measured using the NLTK or TextBlob Python library. This will be executed on an AWS Lambda.
 
 #### Chrome Extension
 The topics and topic sentiment will be displayed in-line on the Product Detail Page (PDP) on Amazon.com through a Google Chrome Extension. The UI will consist of a summary view and ingress point below the star rating and a larger widget above the "Top reviews" section using the same HTML components and CSS styling that the Amazon site uses for a native experience.
@@ -44,7 +44,12 @@ Due to the compute resources needed for this solution and the desire to provide 
 - LDA: Python
 - Sentiment Analysis: Python
 
-### Milestones and Workload
+### Task Breakdown (LOE Estimates)
+- Text Mining: 8 hours
+- Text Processing: 2 hours
+- LDA: 8 hours (analysis of libraries, implementation, fine tuning parameters, AWS infrastructure)
+- Sentiment Anlysis: 4 hours
+- Chome Extension: 8 hours (wiring up the various lambdas, integrating the text mining solution, and building the UI)
 
 ### References
 
