@@ -1,5 +1,8 @@
 # Amazon Product Review Analysis (Chrome Extension) | Intelligent Browsing
 
+### Group Name
+- Vinnie
+
 ### Team Members
 - Benjamin Corn (bcorn2@illinois.edu) | Team Leader
 
