@@ -18,12 +18,16 @@ def get_page(request_url):
         return page
 
 def get_soup_from_page(page, option = "raw"):
-    soup = BeautifulSoup(page.content, 'html.parser')
-    match option:
-        case "raw":
-            return soup
-        case "pretty":
-            return soup.prettify()
+    try:
+        soup = BeautifulSoup(page.content, 'html.parser')
+        match option:
+            case "raw":
+                return soup
+            case "pretty":
+                return soup.prettify()
+    except AttributeError:
+        logging.error("No content for page.")
+        return None
 
 
 def get_global_review_count(soup):
@@ -44,15 +48,31 @@ def get_reviews_by_asin(asin):
     review_divs = []
     reviews = []
 
-    for page in range(1, min([review_page_count,3])):
+    for page in range(1, review_page_count + 1):
         if page > 1:
             req_url = build_request_url(asin, page)
             page = get_page(req_url)
             soup = get_soup_from_page(page, "raw")
-        review_divs += soup.find_all(attrs={"data-hook":"review-body"})
+        reviews_on_page = soup.find_all(attrs={"data-hook":"review-body"})
+        review_divs += reviews_on_page
+
+        if len(reviews_on_page) < 10:
+            break
+
         sleep(random.uniform(2, 4))
 
     for div in review_divs:
-        reviews.append(div.text)
+        reviews.append(div.get_text(strip=True))
 
     return reviews
+
+def write_reviews_to_file(reviews, file_name):
+    textfile = open("../sample_reviews/" + file_name, "w")
+    for review in reviews:
+        textfile.write(review + "\n")
+    textfile.close()
+
+#TODO Create a driver.py file that acts as a console/driver of the program for testing purposes.
+asin = "B08HRLQ9ZG"
+reviews = get_reviews_by_asin(asin)
+write_reviews_to_file(reviews, asin + ".txt")
