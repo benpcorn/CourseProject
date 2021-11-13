@@ -1,11 +1,9 @@
 import requests
 import logging
 import math
+from numpy import random
+from time import sleep
 from bs4 import BeautifulSoup
-
-# 10 reviews per page
-# URL structure contains https://www.amazon.com/dp/product-reviews/B08SG2MS3V/&reviewerType=all_reviews&pageNumber=6 
-# Important URL components "dp", "product-reviews", {ASIN i.e., B08SG2MS3V}, pageNumber=N
 
 def build_request_url(asin, page_number):
     return "https://www.amazon.com/dp/product-reviews/" + asin + "/&reviewerType=all_reviews&pageNumber=" + str(page_number)
@@ -37,14 +35,24 @@ def get_global_review_count(soup):
 def get_review_page_count(review_count, reviews_per_page):
     return math.ceil(review_count / reviews_per_page)
 
-## Testing ##
-asin = "B08SG2MS3V"
-page_number = 1
+def get_reviews_by_asin(asin):
+    req_url = build_request_url(asin, 1)
+    page = get_page(req_url)
+    soup = get_soup_from_page(page, "raw")
+    review_count = get_global_review_count(soup)
+    review_page_count = get_review_page_count(review_count, 10)
+    review_divs = []
+    reviews = []
 
-req_url = build_request_url(asin, page_number)
-page = get_page(req_url)
-soup = get_soup_from_page(page, "raw")
-review_count = get_global_review_count(soup)
-review_page_count = get_review_page_count(review_count, 10)
+    for page in range(1, min([review_page_count,3])):
+        if page > 1:
+            req_url = build_request_url(asin, page)
+            page = get_page(req_url)
+            soup = get_soup_from_page(page, "raw")
+        review_divs += soup.find_all(attrs={"data-hook":"review-body"})
+        sleep(random.uniform(2, 4))
 
-print(review_page_count)
+    for div in review_divs:
+        reviews.append(div.text)
+
+    return reviews
