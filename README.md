@@ -47,6 +47,10 @@ Due to the compute resources needed for this solution and the desire to provide 
 - LDA: Python
 - Sentiment Analysis: Python
 
+### Measuring Success
+- Topic Coherence: I will measure the quality of the topics based on a Topic Coherence measure when determing the # of topics to return based on the review (document) collection.
+- User Input: As a stretch goal, I will look to add a user feedback mechanism to the Chrome extension that shows a UI affordance on the product page asking "which of these topics was most useful to you" or "did you find these topics helpful?" with a thumbs up / thumbs down. This data can be stored in a NoSQL DB along with the product ID for future improvements.
+
 ### Task Breakdown (LOE Estimates)
 - Text Mining: 8 hours
 - Text Processing: 2 hours
