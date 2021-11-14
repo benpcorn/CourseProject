@@ -1,6 +1,7 @@
 import requests
 import logging
 import math
+import proxy as proxy
 from numpy import random
 from time import sleep
 from bs4 import BeautifulSoup
@@ -27,7 +28,7 @@ def get_page(request_url):
 
 def get_soup_from_page(page, option = "raw"):
     try:
-        soup = BeautifulSoup(page.content, 'html.parser')
+        soup = BeautifulSoup(page, 'html.parser')
         match option:
             case "raw":
                 return soup
@@ -50,9 +51,12 @@ def get_global_review_count(soup):
 def get_review_page_count(review_count, reviews_per_page):
     return math.ceil(review_count / reviews_per_page)
 
-def get_reviews_by_asin(asin):
+def get_reviews_by_asin(asin, method):
     req_url = build_request_url(asin, 1)
-    page = get_page(req_url)
+    if method == "proxy":
+        page = proxy.request_page_with_proxy(req_url)["html"]
+    else:
+        page = get_page(req_url)
     soup = get_soup_from_page(page, "raw")
     review_count = get_global_review_count(soup)
     review_page_count = get_review_page_count(review_count, 10)
@@ -64,7 +68,7 @@ def get_reviews_by_asin(asin):
         for page in range(1, review_page_count + 1):
             if page > 1:
                 req_url = build_request_url(asin, page)
-                page = get_page(req_url)
+                page = proxy.request_page_with_proxy(req_url)["html"]
                 soup = get_soup_from_page(page, "raw")
             reviews_on_page = soup.find_all(attrs={"data-hook":"review-body"})
             review_divs += reviews_on_page
@@ -85,5 +89,5 @@ def write_reviews_to_file(reviews, file_name):
 
 #TODO Create a driver.py file that acts as a console/driver of the program for testing purposes.
 asin = "B08HRLQ9ZG"
-reviews = get_reviews_by_asin(asin)
+reviews = get_reviews_by_asin(asin, "proxy")
 write_reviews_to_file(reviews, asin + ".txt")
