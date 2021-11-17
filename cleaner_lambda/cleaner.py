@@ -1,65 +1,32 @@
 import spacy
-import random
 from spacy.lang.en import English
 import nltk
-from nltk.corpus import wordnet as wn
-from nltk.stem.wordnet import WordNetLemmatizer
-import gensim
-from gensim import corpora
-import pickle
+import pandas as pd
+import os
 
 nltk.download('wordnet')
 nltk.download('stopwords')
-spacy.load('en_core_web_sm')
+nlp = spacy.load('en_core_web_lg')
 
 parser = English()
 en_stop = set(nltk.corpus.stopwords.words('english'))
 
-def tokenize(text):
-    lda_tokens = []
-    tokens = parser(text)
-    for token in tokens:
-        if token.orth_.isspace():
-            continue
-        else:
-            lda_tokens.append(token.lower_)
-    return lda_tokens
+def get_aspects(text):
+    doc=nlp(text)
+    doc=[i.text for i in doc if i.text not in en_stop and (i.pos_=="NOUN" or i.pos_=="ADJECTIVE")]
+    doc=list(map(lambda i: i.lower(),doc))
+    doc=pd.Series(doc)
+    doc=doc.value_counts().head().index.tolist()
+    return doc
 
-def get_lemma(word):
-    lemma = wn.morphy(word)
-    if lemma is None:
-        return word
-    else:
-        return lemma
+def load_data(file_name):
+    file = open(os.path.join("../sample_reviews/", file_name))
+    data = file.read()
+    file.close()
+    return data
 
-def get_lemma2(word):
-    return WordNetLemmatizer().lemmatize(word)
-
-def prepare_text_for_lda(text):
-    tokens = tokenize(text)
-    tokens = [token for token in tokens if len(token) > 4]
-    tokens = [token for token in tokens if token not in en_stop]
-    tokens = [get_lemma(token) for token in tokens]
-    return tokens
-
-def generate_text_data_from_file(file_name):
-    text_data = []
-    with open(file_name) as f:
-        for line in f:
-            tokens = prepare_text_for_lda(line)
-            text_data.append(tokens)
-    return text_data
-
-#TODO refactor this into a processor.py file that performs LDA work
-text_data = generate_text_data_from_file("../sample_reviews/B08HRLQ9ZG.txt")
-dictionary = corpora.Dictionary(text_data)
-corpus = [dictionary.doc2bow(text) for text in text_data]
-pickle.dump(corpus, open('corpus.pkl', 'wb'))
-dictionary.save('dictionary.gensim')
-
-NUM_TOPICS = 10
-ldamodel = gensim.models.ldamodel.LdaModel(corpus, num_topics = NUM_TOPICS, id2word=dictionary, passes=15)
-ldamodel.save('model5.gensim')
-topics = ldamodel.print_topics(num_words=4)
-for topic in topics:
-    print(topic)
+# Driver
+nlp.max_length = 1500000
+text = load_data("B08HRLQ9ZG_small.txt")
+aspects = get_aspects(text)
+print(aspects)
