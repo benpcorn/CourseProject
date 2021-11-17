@@ -56,7 +56,7 @@ for phrase in pruned:
     count = 0
     for word in phrase.split():
         if word not in en_stop:
-            count += pruned.count(word)
+            count += reviews.words.count(word)
     
     print(phrase + ": " + str(count))
     feature_count[phrase] = count
