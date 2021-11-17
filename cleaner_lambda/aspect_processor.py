@@ -63,10 +63,7 @@ for phrase in pruned:
 
 counts = list(feature_count.values())
 features = list(feature_count.keys())
-noun_chunks = []
-for chunk in nlp(' '.join(pruned)).noun_chunks:
-    noun_chunks.append(chunk)
-threshold = len(noun_chunks) / 100
+threshold = len(reviews.noun_phrases)/100
 
 frequent_features = list()
 
