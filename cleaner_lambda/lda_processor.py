@@ -49,16 +49,31 @@ def generate_text_data_from_file(file_name):
             text_data.append(tokens)
     return text_data
 
+def compute_coherence_values(dictionary, corpus, texts, limit, start=2, step=3):
+    coherence_values = []
+    model_list = []
+    for num_topics in range(start, limit, step):
+        model = gensim.models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary, num_topics=num_topics)
+        model_list.append(model)
+        coherencemodel = gensim.models.ldamodel.CoherenceModel(model=model, texts=texts, dictionary=dictionary, coherence='c_v')
+        coherence_values.append(coherencemodel.get_coherence())
+
+    return model_list, coherence_values
+
 #TODO refactor this into a processor.py file that performs LDA work
-text_data = generate_text_data_from_file("../sample_reviews/B08HRLQ9ZG.txt")
+text_data = generate_text_data_from_file("/Users/benjcorn/Desktop/UIUC/CS410/CourseProject/cleaner_lambda/B08HRLQ9ZG_tiny.txt")
 dictionary = corpora.Dictionary(text_data)
 corpus = [dictionary.doc2bow(text) for text in text_data]
 pickle.dump(corpus, open('corpus.pkl', 'wb'))
 dictionary.save('dictionary.gensim')
 
-NUM_TOPICS = 10
-ldamodel = gensim.models.ldamodel.LdaModel(corpus, num_topics = NUM_TOPICS, id2word=dictionary, passes=15)
-ldamodel.save('model5.gensim')
-topics = ldamodel.print_topics(num_words=4)
-for topic in topics:
-    print(topic)
+# NUM_TOPICS = 10
+# ldamodel = gensim.models.ldamodel.LdaModel(corpus, num_topics = NUM_TOPICS, id2word=dictionary, passes=15)
+# ldamodel.save('model5.gensim')
+# topics = ldamodel.print_topics(num_words=4)
+# for topic in topics:
+#     print(topic)
+
+model_list, coherence_values = compute_coherence_values(dictionary, corpus, text_data, 40)
+
+print(coherence_values)
