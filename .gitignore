@@ -1,3 +1,11 @@
 
 .DS_Store
 scraper_lambda/config.py
+.vscode/launch.json
+.vscode/settings.json
+corpus.pkl
+dictionary.gensim
+model5.gensim
+model5.gensim.expElogbeta.npy
+model5.gensim.id2word
+model5.gensim.state
