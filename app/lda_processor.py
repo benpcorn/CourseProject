@@ -15,7 +15,7 @@ nlp = spacy.load('en_core_web_sm')
 
 parser = English()
 en_stop = nltk.corpus.stopwords.words('english')
-#en_stop.extend(['camera', 'doorbell', 'system', 'connect', 'base', 'station', 'arlo', 'ring', 'like', 'say']) #remove product specific words
+en_stop.extend(['camera', 'doorbell', 'system', 'connect', 'base', 'station', 'arlo', 'ring', 'like', 'say']) #remove product specific words
 
 def tokenize(text):
     lda_tokens = []
@@ -51,7 +51,7 @@ def sent_to_words(sentences):
 
 def remove_stopwords(texts):
     cleaned = [[word for word in gensim.utils.simple_preprocess(str(doc)) if word not in en_stop] for doc in texts]
-    words = [word for word in cleaned if len(word) >= 1]
+    words = [word for word in cleaned if len(word) >= 4]
     return words
 
 def make_grams(texts):
@@ -117,7 +117,7 @@ def find_nearest(array, value):
     idx = (np.abs(array - value)).argmin() 
     return idx
 
-texts = generate_text_data_from_file("/Users/benjcorn/Desktop/UIUC/CS410/CourseProject/processor_lambda/B08HRLQ9ZG_small.txt")
+texts = generate_text_data_from_file("/Users/benjcorn/Desktop/UIUC/CS410/CourseProject/app/B08HRLQ9ZG_small.txt")
 dictionary = corpora.Dictionary(texts)
 dictionary.filter_extremes(no_below=.1, no_above=0.60)
 corpus = [dictionary.doc2bow(text) for text in texts]
