@@ -10,3 +10,7 @@ model5.gensim.expElogbeta.npy
 model5.gensim.id2word
 model5.gensim.state
 app/__pycache__/app.cpython-310.pyc
+app/__pycache__/config.cpython-310.pyc
+app/__pycache__/lda_processor.cpython-310.pyc
+app/__pycache__/proxy.cpython-310.pyc
+app/__pycache__/scraper.cpython-310.pyc

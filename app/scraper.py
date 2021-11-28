@@ -51,8 +51,9 @@ def get_global_review_count(soup):
 def get_review_page_count(review_count, reviews_per_page):
     return math.ceil(review_count / reviews_per_page)
 
-def get_reviews_by_asin(asin, method):
+def get_reviews_by_asin(asin, method="proxy"):
     req_url = build_request_url(asin, 1)
+    print(asin)
     if method == "proxy":
         page = proxy.request_page_with_proxy(req_url)["html"]
     else:
@@ -78,7 +79,7 @@ def get_reviews_by_asin(asin, method):
 
     for div in review_divs:
         reviews.append(div.get_text(strip=True))
-
+    write_reviews_to_file(reviews, asin + ".txt")
     return reviews
 
 def write_reviews_to_file(reviews, file_name):
@@ -87,6 +88,6 @@ def write_reviews_to_file(reviews, file_name):
         textfile.write(review + "\n")
     textfile.close()
 
-asin = "B08HRLQ9ZG"
-reviews = get_reviews_by_asin(asin, "proxy")
-write_reviews_to_file(reviews, asin + ".txt")
+# asin = "B08SC42G8B"
+# reviews = get_reviews_by_asin(asin, "proxy")
+# write_reviews_to_file(reviews, asin + ".txt")

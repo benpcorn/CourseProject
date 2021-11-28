@@ -117,28 +117,28 @@ def find_nearest(array, value):
     idx = (np.abs(array - value)).argmin() 
     return idx
 
-texts = generate_text_data_from_file("/Users/benjcorn/Desktop/UIUC/CS410/CourseProject/app/B08HRLQ9ZG_small.txt")
-dictionary = corpora.Dictionary(texts)
-dictionary.filter_extremes(no_below=.1, no_above=0.60)
-corpus = [dictionary.doc2bow(text) for text in texts]
-pickle.dump(corpus, open('corpus.pkl', 'wb'))
-dictionary.save('dictionary.gensim')
+# texts = generate_text_data_from_file("/Users/benjcorn/Desktop/UIUC/CS410/CourseProject/app/B08HRLQ9ZG_small.txt")
+# dictionary = corpora.Dictionary(texts)
+# dictionary.filter_extremes(no_below=.1, no_above=0.60)
+# corpus = [dictionary.doc2bow(text) for text in texts]
+# pickle.dump(corpus, open('corpus.pkl', 'wb'))
+# dictionary.save('dictionary.gensim')
 
-print('Number of unique tokens: %d' % len(dictionary))
-print('Number of documents: %d' % len(corpus))
+# print('Number of unique tokens: %d' % len(dictionary))
+# print('Number of documents: %d' % len(corpus))
 
-model_list, coherence_values = compute_coherence_values(dictionary, corpus, texts, 40)
+# model_list, coherence_values = compute_coherence_values(dictionary, corpus, texts, 40)
 
-limit=40; start=2; step=2;
-x = list(range(start, limit, step))
-for m, cv in zip(x, coherence_values):
-    print("Num Topics =", m, " has Coherence Value of", round(cv, 4))
-best_score_idx = find_nearest(coherence_values, 0)
-best_topic_count = x[best_score_idx]
+# limit=40; start=2; step=2;
+# x = list(range(start, limit, step))
+# for m, cv in zip(x, coherence_values):
+#     print("Num Topics =", m, " has Coherence Value of", round(cv, 4))
+# best_score_idx = find_nearest(coherence_values, 0)
+# best_topic_count = x[best_score_idx]
 
-print("Best Topic Count: ", best_topic_count, " with CV of: ", round(coherence_values[best_score_idx],4))
+# print("Best Topic Count: ", best_topic_count, " with CV of: ", round(coherence_values[best_score_idx],4))
 
-model_list[best_score_idx].save('model5.gensim')
-topics = model_list[best_score_idx].print_topics(num_words=4)
-for topic in topics:
-    print(topic)
+# model_list[best_score_idx].save('model5.gensim')
+# topics = model_list[best_score_idx].print_topics(num_words=4)
+# for topic in topics:
+#     print(topic)
