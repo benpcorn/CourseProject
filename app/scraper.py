@@ -1,16 +1,23 @@
 import requests
+import os
 import logging
 import math
 import proxy as proxy
 from numpy import random
 from time import sleep
 from bs4 import BeautifulSoup
-import concurrent.futures
+from tinydb import TinyDB, Query
 
 from requests.api import head
 
+db = TinyDB('./db.json')
+table = db.table('product_reviews')
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
+
 def build_request_url(asin, page_number):
-    return "https://www.amazon.com/dp/product-reviews/" + asin + "/&reviewerType=all_reviews&pageNumber=" + str(page_number)
+    request_url = "https://www.amazon.com/dp/product-reviews/" + asin + "/ref=cm_cr_getr_d_paging_btm_next_{}?pageNumber={}&reviewerType=all_reviews".format(page_number, page_number)
+    logging.info("Built Request URL: {}".format(request_url))
+    return request_url
 
 
 def get_page(request_url):
@@ -24,11 +31,13 @@ def get_page(request_url):
         return None
         logging.error("Error retrieving " + request_url + " with status code: " + page.status_code)
     else:
+        logging.info("get_page successful for {}".format(request_url))
         return page
 
 def get_soup_from_page(page, option = "raw"):
     try:
         soup = BeautifulSoup(page, 'html.parser')
+        logging.info("Soup has been retrieved for page.")
         match option:
             case "raw":
                 return soup
@@ -44,16 +53,25 @@ def get_global_review_count(soup):
     if review_div != None:
         review_count = review_div.span
         review_count = review_count.text.strip().split(" ")[0].replace(',', '')
+        logging.info("Discovered " + str(review_count) + " reviews.")
         return int(review_count)
     else:
-        logging.error("Page contains no data - user agent blocking.")
+        logging.error("Page contains no data.")
 
 def get_review_page_count(review_count, reviews_per_page):
-    return math.ceil(review_count / reviews_per_page)
+    page_count = math.ceil(review_count / reviews_per_page)
+    logging.info("Total Review Pages: {}".format(str(page_count)))
+    return page_count
 
 def get_reviews_by_asin(asin, method="proxy"):
+    logging.info("Starting scrape job for ASIN: ".format(asin))
+    record = {
+        'asin': asin,
+        'reviews': [],
+        'status': 'started'
+    }
+    table.insert(record)
     req_url = build_request_url(asin, 1)
-    print(asin)
     if method == "proxy":
         page = proxy.request_page_with_proxy(req_url)["html"]
     else:
@@ -64,30 +82,42 @@ def get_reviews_by_asin(asin, method="proxy"):
     review_divs = []
     reviews = []
 
-    no_threads = 10
-    with concurrent.futures.ThreadPoolExecutor(max_workers=no_threads) as executor:
-        for page in range(1, review_page_count + 1):
-            if page > 1:
-                req_url = build_request_url(asin, page)
-                page = proxy.request_page_with_proxy(req_url)["html"]
-                soup = get_soup_from_page(page, "raw")
-            reviews_on_page = soup.find_all(attrs={"data-hook":"review-body"})
-            review_divs += reviews_on_page
+    for page in range(1, review_page_count + 1):
+        if page > 1:
+            req_url = build_request_url(asin, page)
+            page = proxy.request_page_with_proxy(req_url)["html"]
+            if page == None:
+                break 
+            soup = get_soup_from_page(page, "raw")
+        reviews_on_page = soup.find_all(attrs={"data-hook":"review-body"})
+        review_divs += reviews_on_page
 
-            if len(reviews_on_page) < 10:
-                break
+        if len(reviews_on_page) < 10:
+            break
 
     for div in review_divs:
         reviews.append(div.get_text(strip=True))
+
     write_reviews_to_file(reviews, asin + ".txt")
+    write_reviews_to_db(reviews, asin)
+
     return reviews
 
 def write_reviews_to_file(reviews, file_name):
+    logging.info("Writing reviews to file.")
     textfile = open("../sample_reviews/" + file_name, "w")
     for review in reviews:
         textfile.write(review + "\n")
     textfile.close()
 
+def write_reviews_to_db(reviews, asin):
+    logging.info("Writing reviews to DB.")
+    record = {
+        'asin': asin,
+        'reviews': reviews,
+        'status': 'done'
+    }
+    table.insert(record)
+
 # asin = "B08SC42G8B"
 # reviews = get_reviews_by_asin(asin, "proxy")
-# write_reviews_to_file(reviews, asin + ".txt")

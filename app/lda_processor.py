@@ -8,6 +8,10 @@ from gensim import corpora
 import pickle
 import numpy as np
 from gensim.models import Phrases
+from tinydb import TinyDB, Query, where
+import logging
+db = TinyDB('./db.json')
+table = db.table('product_reviews')
 
 nltk.download('wordnet')
 nltk.download('stopwords')
@@ -79,6 +83,40 @@ def generate_text_data_from_file(file_name):
     data_grams = make_grams(data_lemmatized)
     return data_grams
 
+def generate_text_data_from_record(texts, asin):
+    data_words = list(sent_to_words(texts))
+    data_words_nostops = remove_stopwords(data_words)
+    data_lemmatized = lemmatization(data_words_nostops, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
+    data_grams = make_grams(data_lemmatized)
+
+    dictionary = corpora.Dictionary(data_grams)
+    dictionary.filter_extremes(no_below=.1, no_above=0.60)
+    corpus = [dictionary.doc2bow(text) for text in data_grams]
+    pickle.dump(corpus, open('corpus.pkl', 'wb'))
+    dictionary.save('dictionary.gensim')
+
+    logging.info('Number of unique tokens: %d' % len(dictionary))
+    logging.info('Number of documents: %d' % len(corpus))
+
+    model_list, coherence_values = compute_coherence_values(dictionary, corpus, data_grams, 40)
+
+    limit=40; start=2; step=2;
+    x = list(range(start, limit, step))
+    for m, cv in zip(x, coherence_values):
+        logging.info("Num Topics =", m, " has Coherence Value of", round(cv, 4))
+    best_score_idx = find_nearest(coherence_values, 0)
+    best_topic_count = x[best_score_idx]
+
+    logging.info("Best Topic Count: ", best_topic_count, " with CV of: ", round(coherence_values[best_score_idx],4))
+
+    model_list[best_score_idx].save('model5.gensim')
+    topics = model_list[best_score_idx].print_topics(num_words=4)
+
+    Product = Query()
+    record = table.search(Product.asin == asin and Product.status == 'done')[-1]
+    table.update({'topics': topics}, doc_ids=[record.doc_id])
+    return topics
+
 def compute_coherence_values(dictionary, corpus, texts, limit, start=2, step=2):
     coherence_values = []
     model_list = []
@@ -142,3 +180,8 @@ def find_nearest(array, value):
 # topics = model_list[best_score_idx].print_topics(num_words=4)
 # for topic in topics:
 #     print(topic)
+
+Product = Query()
+records = table.search(Product.asin == "B08SC42G8B" and Product.status == 'done')
+reviews = records[-1]['reviews']
+texts = generate_text_data_from_record(reviews, "B08SC42G8B")

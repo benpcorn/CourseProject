@@ -10,10 +10,8 @@ def request_page_with_proxy(request_url):
     "api_key": config.proxy_key,
     "url": request_url,
     "device": config.proxy_device,
-    #"country": config.proxy_country,
     "wait_for": config.proxy_timeout_ms,
     "proxy_type": config.proxy_type,
-    "url": request_url,
     "render_js": 1
     }
 
