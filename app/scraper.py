@@ -28,8 +28,8 @@ def get_page(request_url):
 
     page = requests.get(request_url, headers = headers)
     if page.status_code != 200:
+        logging.error("Error retrieving {} with status code: {}".format(request_url, page.status_code))
         return None
-        logging.error("Error retrieving " + request_url + " with status code: " + page.status_code)
     else:
         logging.info("get_page successful for {}".format(request_url))
         return page
@@ -68,7 +68,7 @@ def get_reviews_by_asin(asin, method="proxy"):
     record = {
         'asin': asin,
         'reviews': [],
-        'status': 'started'
+        'status': 'scraping_started'
     }
     table.insert(record)
     req_url = build_request_url(asin, 1)
@@ -115,9 +115,10 @@ def write_reviews_to_db(reviews, asin):
     record = {
         'asin': asin,
         'reviews': reviews,
-        'status': 'done'
+        'status': 'scraping_done'
     }
-    table.insert(record)
+    Product = Query()
+    table.update(record, Product.asin == asin)
 
 # asin = "B08SC42G8B"
 # reviews = get_reviews_by_asin(asin, "proxy")

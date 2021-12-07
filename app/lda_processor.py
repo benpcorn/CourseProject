@@ -10,6 +10,8 @@ import numpy as np
 from gensim.models import Phrases
 from tinydb import TinyDB, Query, where
 import logging
+import os
+
 db = TinyDB('./db.json')
 table = db.table('product_reviews')
 
@@ -20,6 +22,9 @@ nlp = spacy.load('en_core_web_sm')
 parser = English()
 en_stop = nltk.corpus.stopwords.words('english')
 en_stop.extend(['camera', 'doorbell', 'system', 'connect', 'base', 'station', 'arlo', 'ring', 'like', 'say']) #remove product specific words
+
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
+
 
 def tokenize(text):
     lda_tokens = []
@@ -95,8 +100,8 @@ def generate_text_data_from_record(texts, asin):
     pickle.dump(corpus, open('corpus.pkl', 'wb'))
     dictionary.save('dictionary.gensim')
 
-    logging.info('Number of unique tokens: %d' % len(dictionary))
-    logging.info('Number of documents: %d' % len(corpus))
+    logging.info("Number of unique tokens: {}".format(len(dictionary)))
+    logging.info("Number of documents: {}".format(len(corpus)))
 
     model_list, coherence_values = compute_coherence_values(dictionary, corpus, data_grams, 40)
 
@@ -107,14 +112,15 @@ def generate_text_data_from_record(texts, asin):
     best_score_idx = find_nearest(coherence_values, 0)
     best_topic_count = x[best_score_idx]
 
-    logging.info("Best Topic Count: ", best_topic_count, " with CV of: ", round(coherence_values[best_score_idx],4))
+    logging.info("Best Topic Count: {} with CV of: ".format(best_topic_count, round(coherence_values[best_score_idx],4)))
 
     model_list[best_score_idx].save('model5.gensim')
     topics = model_list[best_score_idx].print_topics(num_words=4)
 
     Product = Query()
-    record = table.search(Product.asin == asin and Product.status == 'done')[-1]
-    table.update({'topics': topics}, doc_ids=[record.doc_id])
+    record = table.search(Product.asin == asin)[-1]
+    record["topics"] = topics
+    table.update(record, Product.asin == asin)
     return topics
 
 def compute_coherence_values(dictionary, corpus, texts, limit, start=2, step=2):
@@ -181,7 +187,7 @@ def find_nearest(array, value):
 # for topic in topics:
 #     print(topic)
 
-Product = Query()
-records = table.search(Product.asin == "B08SC42G8B" and Product.status == 'done')
-reviews = records[-1]['reviews']
-texts = generate_text_data_from_record(reviews, "B08SC42G8B")
+# Product = Query()
+# records = table.search(Product.asin == "B08SC42G8B" and Product.status == 'done')
+# reviews = records[-1]['reviews']
+# texts = generate_text_data_from_record(reviews, "B08SC42G8B")
