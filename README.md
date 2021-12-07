@@ -62,3 +62,8 @@ Due to the compute resources needed for this solution and the desire to provide 
 
 <sup>[1]</sup> https://spiegel.medill.northwestern.edu/online-reviews/
 <sup>[2]</sup> https://www.powerreviews.com/wp-content/uploads/2016/04/PowerofReviews_2016.pdf
+
+### How to Run
+From the app folder, run the following command to start Flask on localhost:5000
+
+    FLASK_APP=app.py FLASK_ENV=development flask run
