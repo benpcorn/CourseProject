@@ -3,10 +3,8 @@ chrome.extension.sendMessage({}, function(response) {
 	if (document.getElementById('cm_cr_dp_d_write_review')) {
 		clearInterval(readyStateCheckInterval);
 
-		var button = document.createElement("button");
-		button.className = "";
-		button.textContent = "Analyze Reviews";
-		button.addEventListener('click', handleAnalyze);
+		// Try to see if we have any existing results and display them
+		retrieveAnalysis(getASINFromPage())
 		var reviewDiv = document.querySelectorAll('[data-widget-name="cr-solicitation"]')[0]
 		var analyzeDiv = reviewDiv.cloneNode(true);
 		analyzeDiv.id = 'analyzer-div'
@@ -21,7 +19,15 @@ chrome.extension.sendMessage({}, function(response) {
 	}, 10);
 });
 
+const handleAnalyze = async e => {
+	// OnClick Handler for Analyze Button on DP
+	e.preventDefault();
+	forceAnalysis(getASINFromPage())
+	console.log(getASINFromPage())
+}
+
 const retrieveAnalysis = async ASIN => {
+	// POST request to initiate scrape + process step
 	const url = 'http://localhost:5000/scrape';
 	const options = {
 	  method: 'POST',
@@ -39,14 +45,58 @@ const retrieveAnalysis = async ASIN => {
 		.then(data => showTopics(data));
 };
 
-const handleAnalyze = async e => {
-	var ASIN = window.location.href.substring(window.location.href.indexOf('dp') + 3, window.location.href.indexOf('dp') + 13)
-	e.preventDefault();
-	retrieveAnalysis(ASIN)
-	console.log(ASIN)
-}
+const forceAnalysis = async ASIN => {
+	const url = 'http://localhost:5000/scrape';
+	const options = {
+	  method: 'POST',
+	  headers: {
+		'Accept': 'application/json',
+		'Content-Type': 'application/json;charset=UTF-8'
+	  },
+	  body: JSON.stringify({
+		"asin": ASIN,
+		"force": true
+		})
+	};
+	
+	fetch(url, options)
+		.then(response => response.json())
+};
 
 const showTopics = async e => {
-	var analyzerDiv = document.getElementById("analyzer-div")
-	analyzerDiv.insertAdjacentText("afterEnd", e["topics"])
+	if (e.hasOwnProperty("topics") && e.topics.length >= 1) {
+		var analyzerDiv = document.getElementById("analyzer-div")
+		analyzerDiv.appendChild(createTable(e["pretty_topics"]))
+	}
 }
+
+const showMessage = async e => {
+	var analyzerDiv = document.getElementById("analyzer-div")
+	analyzerDiv.insertAdjacentText("afterEnd", e)
+}
+
+function getASINFromPage() {
+	return window.location.href.substring(window.location.href.indexOf('dp') + 3, window.location.href.indexOf('dp') + 13)
+}
+
+function createTable(tableData) {
+	var table = document.createElement('table');
+	var tableBody = document.createElement('tbody');
+  
+	tableData.forEach(function(rowData) {
+	  var row = document.createElement('tr');
+  
+	  rowData.forEach(function(cellData) {
+		var cell = document.createElement('td');
+		cell.appendChild(document.createTextNode(cellData));
+		cell.style.border = "1px solid #000";
+		row.appendChild(cell);
+	  });
+  
+	  tableBody.appendChild(row);
+	});
+  
+	table.style.border = "1px solid #000";
+	table.appendChild(tableBody);
+	return table;
+  }

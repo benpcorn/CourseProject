@@ -3,6 +3,8 @@ import os
 import logging
 import math
 import proxy as proxy
+import lda_processor
+from threading import Thread
 from numpy import random
 from time import sleep
 from bs4 import BeautifulSoup
@@ -68,7 +70,9 @@ def get_reviews_by_asin(asin, method="proxy"):
     record = {
         'asin': asin,
         'reviews': [],
-        'status': 'scraping_started'
+        'status': 'Scraping Started',
+        'topics': [],
+        'pretty_topics': []
     }
     table.insert(record)
     req_url = build_request_url(asin, 1)
@@ -115,10 +119,14 @@ def write_reviews_to_db(reviews, asin):
     record = {
         'asin': asin,
         'reviews': reviews,
-        'status': 'scraping_done'
+        'status': 'Scraping Done',
+        'topics': [],
+        'pretty_topics': []
     }
     Product = Query()
     table.update(record, Product.asin == asin)
 
-# asin = "B08SC42G8B"
-# reviews = get_reviews_by_asin(asin, "proxy")
+    logging.info("Reviews written to DB record. Starting LDA processor now.")
+    thread = Thread(target=lda_processor.generate_text_data_from_record, args=(reviews,asin,))
+    thread.daemon = True
+    thread.start()

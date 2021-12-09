@@ -11,6 +11,7 @@ import numpy as np
 from gensim.models import Phrases
 from tinydb import TinyDB, Query, where
 import logging
+import json
 import os
 
 db = TinyDB('./db.json')
@@ -90,6 +91,7 @@ def generate_text_data_from_file(file_name):
     return data_grams
 
 def generate_text_data_from_record(texts, asin):
+    table.clear_cache()
     data_words = list(sent_to_words(texts))
     data_words_nostops = remove_stopwords(data_words)
     data_lemmatized = lemmatization(data_words_nostops, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
@@ -117,6 +119,7 @@ def generate_text_data_from_record(texts, asin):
 
     model_list[best_score_idx].save('model5.gensim')
     topics = model_list[best_score_idx].show_topics(num_words=4)
+    ugly_topics = model_list[best_score_idx].print_topics(num_words=4)
 
     pretty_topics = []
     filters = [lambda x: x.lower(), strip_punctuation, strip_numeric]
@@ -129,8 +132,9 @@ def generate_text_data_from_record(texts, asin):
     Product = Query()
     record = table.search(Product.asin == asin)[-1]
     logging.info(record)
-    record["topics"] = pretty_topics
-    #record["pretty_topics"] = pretty_topics
+    record["pretty_topics"] = pretty_topics
+    record["topics"] = json.dumps(ugly_topics)
+    record["status"] = "Topic Generation Complete"
     logging.info(record)
     table.update(record, Product.asin == asin)
     return topics
