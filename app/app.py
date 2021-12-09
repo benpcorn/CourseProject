@@ -1,6 +1,7 @@
 from flask import Flask, json
 from flask import jsonify
 from flask import request
+from flask_cors import CORS
 from threading import Thread
 from tinydb import TinyDB, Query
 import logging
@@ -12,6 +13,8 @@ app = Flask(__name__)
 db = TinyDB('./db.json')
 table = db.table('product_reviews')
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
+cors = CORS(app)
+
 
 @app.route("/scrape", methods=['POST'])
 def scraper_api():

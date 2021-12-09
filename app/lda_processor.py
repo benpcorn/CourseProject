@@ -4,6 +4,7 @@ import nltk
 from nltk.corpus import wordnet as wn
 from nltk.stem.wordnet import WordNetLemmatizer
 import gensim
+from gensim.parsing.preprocessing import preprocess_string, strip_punctuation, strip_numeric
 from gensim import corpora
 import pickle
 import numpy as np
@@ -115,11 +116,22 @@ def generate_text_data_from_record(texts, asin):
     logging.info("Best Topic Count: {} with CV of: ".format(best_topic_count, round(coherence_values[best_score_idx],4)))
 
     model_list[best_score_idx].save('model5.gensim')
-    topics = model_list[best_score_idx].print_topics(num_words=4)
+    topics = model_list[best_score_idx].show_topics(num_words=4)
 
+    pretty_topics = []
+    filters = [lambda x: x.lower(), strip_punctuation, strip_numeric]
+
+    for topic in topics:
+        pretty_topics.append(preprocess_string(topic[1], filters))
+
+    logging.info("Pretty Topics: {}".format(pretty_topics))
+    logging.info("Normal Topics: {}".format(topics))
     Product = Query()
     record = table.search(Product.asin == asin)[-1]
-    record["topics"] = topics
+    logging.info(record)
+    record["topics"] = pretty_topics
+    #record["pretty_topics"] = pretty_topics
+    logging.info(record)
     table.update(record, Product.asin == asin)
     return topics
 
@@ -160,34 +172,3 @@ def find_nearest(array, value):
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin() 
     return idx
-
-# texts = generate_text_data_from_file("/Users/benjcorn/Desktop/UIUC/CS410/CourseProject/app/B08HRLQ9ZG_small.txt")
-# dictionary = corpora.Dictionary(texts)
-# dictionary.filter_extremes(no_below=.1, no_above=0.60)
-# corpus = [dictionary.doc2bow(text) for text in texts]
-# pickle.dump(corpus, open('corpus.pkl', 'wb'))
-# dictionary.save('dictionary.gensim')
-
-# print('Number of unique tokens: %d' % len(dictionary))
-# print('Number of documents: %d' % len(corpus))
-
-# model_list, coherence_values = compute_coherence_values(dictionary, corpus, texts, 40)
-
-# limit=40; start=2; step=2;
-# x = list(range(start, limit, step))
-# for m, cv in zip(x, coherence_values):
-#     print("Num Topics =", m, " has Coherence Value of", round(cv, 4))
-# best_score_idx = find_nearest(coherence_values, 0)
-# best_topic_count = x[best_score_idx]
-
-# print("Best Topic Count: ", best_topic_count, " with CV of: ", round(coherence_values[best_score_idx],4))
-
-# model_list[best_score_idx].save('model5.gensim')
-# topics = model_list[best_score_idx].print_topics(num_words=4)
-# for topic in topics:
-#     print(topic)
-
-# Product = Query()
-# records = table.search(Product.asin == "B08SC42G8B" and Product.status == 'done')
-# reviews = records[-1]['reviews']
-# texts = generate_text_data_from_record(reviews, "B08SC42G8B")
