@@ -119,13 +119,14 @@ def generate_text_data_from_record(texts, asin):
 
     model_list[best_score_idx].save('model5.gensim')
     topics = model_list[best_score_idx].show_topics(num_words=4)
-    ugly_topics = model_list[best_score_idx].print_topics(num_words=4)
 
     pretty_topics = []
+    ugly_topics = []
     filters = [lambda x: x.lower(), strip_punctuation, strip_numeric]
 
     for topic in topics:
         pretty_topics.append(preprocess_string(topic[1], filters))
+        ugly_topics.append(topic[1])
 
     logging.info("Pretty Topics: {}".format(pretty_topics))
     logging.info("Normal Topics: {}".format(topics))
@@ -133,11 +134,10 @@ def generate_text_data_from_record(texts, asin):
     record = table.search(Product.asin == asin)[-1]
     logging.info(record)
     record["pretty_topics"] = pretty_topics
-    record["topics"] = json.dumps(ugly_topics)
+    record["topics"] = ugly_topics
     record["status"] = "Topic Generation Complete"
     logging.info(record)
     table.update(record, Product.asin == asin)
-    return topics
 
 def compute_coherence_values(dictionary, corpus, texts, limit, start=2, step=2):
     coherence_values = []
