@@ -67,3 +67,24 @@ Due to the compute resources needed for this solution and the desire to provide 
 From the app folder, run the following command to start Flask on localhost:5000
 
     FLASK_APP=app.py FLASK_ENV=development flask run
+
+#### Start Scrape Job
+POST http://127.0.0.1:5000/scrape
+
+    {
+        "asin": "B08SC42G8B"
+    }
+    
+To force a re-run of an existing ASIN, include the optional parameter "force" to request body.
+
+    {
+        "asin": "B08SC42G8B",
+        "force": true
+    }
+    
+#### Start LDA Processor Job
+POST http://127.0.0.1:5000/process
+
+    {
+        "asin": "B08SC42G8B"
+    }
