@@ -1,4 +1,4 @@
-# Amazon Product Review Analysis (Chrome Extension) | Intelligent Browsing
+# Amazon Product Review Analyzer
 
 ### Group Name
 - Vinnie
@@ -62,48 +62,3 @@ Due to the compute resources needed for this solution and the desire to provide 
 
 <sup>[1]</sup> https://spiegel.medill.northwestern.edu/online-reviews/
 <sup>[2]</sup> https://www.powerreviews.com/wp-content/uploads/2016/04/PowerofReviews_2016.pdf
-
-### How to Install
-
-1. This deployment requires Python 3.10+. I'd recommend using Conda (Anaconda / Miniconda) to save yourself frustration when managing multiple Python versions and libraries. You can quickly install Miniconda with their installers for MacOS and Windows: https://docs.conda.io/en/latest/miniconda.html (hint: use .pkg on MacOS for faster install).
-2. Clone this repository to your machine.
-
-#### Python Project
-    conda create --name env-name python=3.10
-    conda activate env-name
-    pip install .
-    
-#### Extension
-1. From Google Chrome, chrome://extensions/
-2. Click "Load unpacked"
-3. Select the extension folder
-
-### How to Run
-From the app folder, run the following command to start Flask on localhost:5000
-
-Option 1:
-    ./run.sh
-    
-Option 2:
-    FLASK_APP=app.py FLASK_ENV=development flask run
-
-#### Start Scrape Job
-POST http://127.0.0.1:5000/scrape
-
-    {
-        "asin": "B08SC42G8B"
-    }
-    
-To force a re-run of an existing ASIN, include the optional parameter "force" to request body.
-
-    {
-        "asin": "B08SC42G8B",
-        "force": true
-    }
-    
-#### Start LDA Processor Job
-POST http://127.0.0.1:5000/process
-
-    {
-        "asin": "B08SC42G8B"
-    }
