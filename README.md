@@ -8,7 +8,7 @@ https://www.youtube.com/watch?v=modLkilqF_U
 ### Implementation Overview
 
 1. Flask API: ARA runs a lightweight Flask server with two REST API endpoints: `scrape` which scrapes reviews and inserts them to a record in `tinydb` and `process` which runs Gensim's LDA topic modelling on those reviews to generate topics.
-2. Chrome Extension: Adds an "Analyze" button to any product page on Amazon.com, and renders the topics in a table on the product page if they exist.
+2. Chrome Extension: Adds an "Analyze" button to any product page on Amazon.com, and renders the topics in a table (1 row per topic, 1 column per word in the topic) on the product page if they exist.
 
 #### Database Model for Product Records
 
@@ -170,7 +170,7 @@ The extension business logic is handled in `inject.js`. The original intent was 
 
 ![alt text](https://user-images.githubusercontent.com/73569064/145688835-d976edb3-4e4f-435f-bd46-0029ee35101e.png)
 
-When the div mentioned above loads, a request is automatically made to the Flask `/scrape` endpoint by passing in the ASIN from the product page `const retrieveAnalysis = async ASIN => {` on page load. If reviews and topics already exist for the product, they are rendered in a table. Otherwise a scrape job is kicked off automatically, and then a subsequent processor job is run. After some time, refreshing the page will render the topics in a table (see image above as example) - for now, the best way to do this is to have your logs running to view the progress of the scrape and processing job.
+**When the div mentioned above loads, a request is automatically made to the Flask `/scrape` endpoint by passing in the ASIN from the product page `const retrieveAnalysis = async ASIN => {` on page load. If reviews and topics already exist for the product, they are rendered in a table (1 row per topic, 1 column per topic word). Otherwise a scrape job is kicked off automatically, and then a subsequent processor job is run. After some time, refreshing the page will render the topics in a table (see image above as example) - for now, the best way to do this is to have your logs running to view the progress of the scrape and processing job.**
 
 Selecting the "Analyze" button will fire the `const forceAnalysis = async ASIN => {` method with the `force` request parameter, forcing the scraper to generate new review results.
 
