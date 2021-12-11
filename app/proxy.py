@@ -3,6 +3,7 @@ import config
 import requests
 import http.client
 from urllib import parse
+from random import randint
 
 def request_page_with_proxy(request_url):
 
@@ -12,7 +13,8 @@ def request_page_with_proxy(request_url):
     "device": config.proxy_device,
     "wait_for": config.proxy_timeout_ms,
     "proxy_type": config.proxy_type,
-    "render_js": 1
+    "render_js": 1,
+    "session": randint(1,500)
     }
 
     try:
@@ -33,7 +35,8 @@ def request_page_with_proxy(request_url):
         else:
             res = {
                 "status_code": res.code,
-                "html": None
+                "html": None,
+                "error": data
             }
             return res
 

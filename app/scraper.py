@@ -7,6 +7,7 @@ import lda_processor
 from threading import Thread
 from bs4 import BeautifulSoup
 from tinydb import TinyDB, Query
+import time
 
 db = TinyDB('./db.json')
 table = db.table('product_reviews')
@@ -33,6 +34,7 @@ def get_page(request_url):
         return page
 
 def get_soup_from_page(page, option = "raw"):
+    logging.info("Attempting to get soup.")
     try:
         soup = BeautifulSoup(page, 'html.parser')
         logging.info("Soup has been retrieved for page.")
@@ -41,9 +43,9 @@ def get_soup_from_page(page, option = "raw"):
                 return soup
             case "pretty":
                 return soup.prettify()
-    except AttributeError:
-        logging.error("No content for page.")
-        return None
+    except (AttributeError, TypeError):
+        logging.error("Unable to get soup. :/")
+        return None,
 
 
 def get_global_review_count(soup):
@@ -51,7 +53,7 @@ def get_global_review_count(soup):
     if review_div != None:
         review_count = review_div.span
         review_count = review_count.text.strip().split(" ")[0].replace(',', '')
-        logging.info("Discovered " + str(review_count) + " reviews.")
+        logging.info("Discovered {} reviews.".format(review_count))
         return int(review_count)
     else:
         logging.error("Page contains no data.")
@@ -63,40 +65,76 @@ def get_review_page_count(review_count, reviews_per_page):
 
 def get_reviews_by_asin(asin, method="proxy"):
     logging.info("Starting scrape job for ASIN: {}".format(asin))
-    req_url = build_request_url(asin, 1)
-    if method == "proxy":
-        page = proxy.request_page_with_proxy(req_url)["html"]
-    else:
-        page = get_page(req_url)
-    soup = get_soup_from_page(page, "raw")
-
-    review_count = get_global_review_count(soup)
-    review_page_count = get_review_page_count(review_count, 10)
+    record = {
+        'asin': asin,
+        'reviews': [],
+        'status': 'scrape_started',
+        'topics': [],
+        'pretty_topics': [],
+        'product_title': ''
+    }
+    table.insert(record)
     review_divs = []
     reviews = []
 
-    for page in range(1, review_page_count + 1):
-        if page > 1:
-            req_url = build_request_url(asin, page)
-            page = proxy.request_page_with_proxy(req_url)["html"]
-            if page == None:
-                break 
-            soup = get_soup_from_page(page, "raw")
-        reviews_on_page = soup.find_all(attrs={"data-hook":"review-body"})
-        review_divs += reviews_on_page
+    try:
+        req_url = build_request_url(asin, 1)
+        if method == "proxy":
+            page = proxy.request_page_with_proxy(req_url)
 
-        if len(reviews_on_page) < 10:
-            break
+            if page["status_code"] != 200:
+                logging.error("{}".format(page["error"]))
+            else:
+                page = page["html"]
+        else:
+            page = get_page(req_url)
+        soup = get_soup_from_page(page, "raw")
 
-    for div in review_divs:
-        reviews.append(div.get_text(strip=True))
+        review_count = get_global_review_count(soup)
+        review_page_count = get_review_page_count(review_count, 10)
 
-    product_title = soup.title.string.replace("Amazon.com: Customer reviews: ", "")
+        for page in range(1, review_page_count + 1):
+            if page > 1:
+                req_url = build_request_url(asin, page)
+                page_content = proxy.request_page_with_proxy(req_url)
 
-    #write_reviews_to_file(reviews, asin + ".txt")
-    write_reviews_to_db(reviews, asin, product_title)
+                if page_content["status_code"] != 200:
+                    logging.error("{}".format(page_content["error"]))
+                else:
+                    page_content = page_content["html"]
 
-    return reviews
+                if page_content == None:
+                    logging.info("Page {} was NoneType.".format(page))
+                    continue
+
+                soup = get_soup_from_page(page_content, "raw")
+
+                if soup == None:
+                    logging.info("Soup for page {} was NoneType.".format(page))
+                    continue
+
+            reviews_on_page = soup.find_all(attrs={"data-hook":"review-body"})
+            review_divs += reviews_on_page
+
+            for div in review_divs:
+                reviews.append(div.get_text(strip=True))
+
+            if len(reviews_on_page) < 10:
+                logging.info("Reached the last review page.")
+                break
+            
+            time.sleep(0.500)
+
+        product_title = soup.title.string.replace("Amazon.com: Customer reviews: ", "")
+
+        #write_reviews_to_file(reviews, asin + ".txt")
+        if len(reviews):
+            write_reviews_to_db(reviews, asin, product_title)
+
+        return reviews
+    except AttributeError:
+        if len(reviews):
+            write_reviews_to_db(reviews, asin)
 
 def write_reviews_to_file(reviews, file_name):
     logging.info("Writing reviews to file.")
@@ -105,17 +143,18 @@ def write_reviews_to_file(reviews, file_name):
         textfile.write(review + "\n")
     textfile.close()
 
-def write_reviews_to_db(reviews, asin, product_title):
+def write_reviews_to_db(reviews, asin, product_title = "Error Occurred"):
     logging.info("Writing reviews to DB.")
     record = {
         'asin': asin,
         'reviews': reviews,
-        'status': 'Scraping Done',
+        'status': 'scrape_done',
         'topics': [],
         'pretty_topics': [],
         'product_title': product_title
     }
-    table.insert(record)
+    Product = Query()
+    table.update(record, Product.asin == asin)
 
     logging.info("Product review record written to DB: {}. Starting LDA processor now.".format(record))
     thread = Thread(target=lda_processor.generate_text_data_from_record, args=(reviews,asin,product_title,))

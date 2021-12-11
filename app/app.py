@@ -21,28 +21,49 @@ def scraper_api():
     if request.method == 'POST':
         payload = request.get_json()
         logging.info("Received payload: {}".format(payload))
+
+        if "asin" not in payload.keys():
+            return jsonify({"state": "failure", "reason": "ASIN not provided."})
+
         table.clear_cache()
         Product = Query()
         record = table.search(Product.asin == payload["asin"])
-        if len(record) > 0: 
-            logging.info("Record: {}".format(record[-1].doc_id))
 
-        if len(record) != 0 and len(record[-1]["topics"]) == 0 and "force" not in payload.keys():
-            # Kick off LDA processing if we have reviews, but no topics.
-            logging.info("Starting LDA processor on existing review data for: {}".format(payload["asin"]))
+        recordCount = len(record)
+        containsReview = "reviews" in record[-1].keys() if recordCount > 0 else False
+        reviewCount = len(record[-1]["reviews"]) if containsReview else 0
+        containsTopics = "topics" in record[-1].keys() if reviewCount > 0 else False
+        topicCount = len(record[-1]["topics"]) if containsTopics else 0
+
+        if recordCount: 
+            logging.info("Record found for ASIN: {} with doc_id: {}".format(payload["asin"], record[-1].doc_id))
+        else:
+            logging.info("No records found for ASIN: {}".format(payload["asin"]))
+
+        if recordCount == 0:
+            # Start scraping if there is no data for the provided ASIN.
+            logging.info("No records found... starting Scrape processor for: {}".format(payload["asin"]))
+            thread = Thread(target=scraper.get_reviews_by_asin, args=(payload["asin"],))
+            thread.daemon = True
+            thread.start()
+            return jsonify({'thread_name': str(thread.name),
+                            'started': True})
+        elif recordCount > 0 and reviewCount > 0 and topicCount == 0 and "force" not in payload.keys():
+            # Start LDA processor if there is review data, but no topic data.
+            logging.info("No topics found for ASIN... starting LDA processor on existing review data for: {}".format(payload["asin"]))
             reviews = record['reviews']
             thread = Thread(target=lda_processor.generate_text_data_from_record, args=(reviews,payload["asin"],record['product_title'],))
             thread.daemon = True
             thread.start()
             return jsonify({'thread_name': str(thread.name),
                             'started': True})
-        elif len(record) != 0 and "force" not in payload.keys():
-            # Return the existing data we have
+        elif recordCount > 0 and reviewCount > 0 and topicCount > 0 and "force" not in payload.keys():
+            # Return the DB record for the ASIN when there are reviews and topics.
             logging.info("Found existing record for: {}, returning results.".format(payload["asin"]))
             return jsonify(record[-1])
         else:
-            # Kick off scraping
-            logging.info("Starting Scrape processor for: {}".format(payload["asin"]))
+            # Force scrape to start.
+            logging.info("Force parameter used... starting Scrape processor for: {}".format(payload["asin"]))
             thread = Thread(target=scraper.get_reviews_by_asin, args=(payload["asin"],))
             thread.daemon = True
             thread.start()
@@ -53,25 +74,38 @@ def scraper_api():
 def processor_api():
     if request.method == 'POST':
         payload = request.get_json()
+
+        if "asin" not in payload.keys():
+            return jsonify({"state": "failure", "reason": "ASIN not provided."})
+
         table.clear_cache()
         Product = Query()
         record = table.search(Product.asin == payload["asin"])[-1]
 
-        if len(record) and len(record["topics"]) == 0:
+        recordCount = len(record)
+        containsReview = "reviews" in record[-1].keys() if recordCount > 0 else False
+        reviewCount = len(record[-1]["reviews"]) if containsReview else 0
+        containsTopics = "topics" in record[-1].keys() if reviewCount > 0 else False
+        topicCount = len(record[-1]["topics"]) if containsTopics else 0
+
+        if recordCount > 0 and reviewCount > 0 and topicCount == 0:
+            # Start LDA processor when there are reviews, but no topics.
             reviews = record['reviews']
             thread = Thread(target=lda_processor.generate_text_data_from_record, args=(reviews,payload["asin"],record['product_title'],))
             thread.daemon = True
             thread.start()
             return jsonify({'thread_name': str(thread.name),
                             'started': True})
-        elif len(record) and len(record["topics"]) > 0 and "force" in payload.keys():
+        elif recordCount > 0 and reviewCount > 0 and topicCount > 0 and "force" in payload.keys():
+            # Start LDA processor when there are reviews and the force flag exists.
             reviews = record['reviews']
             thread = Thread(target=lda_processor.generate_text_data_from_record, args=(reviews,payload["asin"],record['product_title'],))
             thread.daemon = True
             thread.start()
             return jsonify({'thread_name': str(thread.name),
                             'started': True})
-        elif len(record) and len(record["topics"]) > 0:
+        elif recordCount and topicCount > 0:
+            # Return topics if they exist
             return jsonify(record)
         else:
             return jsonify({'status': 'failed', 'reason': 'Product reviews not found.'})

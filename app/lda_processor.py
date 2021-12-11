@@ -64,15 +64,15 @@ def remove_stopwords(texts):
     return words
 
 def make_grams(texts):
-    bigram = Phrases(texts, min_count=20)
-    # trigram = Phrases(bigram[texts], min_count=len(texts)*.05)
+    bigram = Phrases(texts, min_count=50)
+    trigram = Phrases(bigram[texts], min_count=50)
     for idx in range(len(texts)):
         for token in bigram[texts[idx]]:
             if '_' in token:
                 texts[idx].append(token)
-        # for token in trigram[bigram[texts[idx]]]:
-        #     if token.count('_') == 2:
-        #         texts[idx].append(token)
+        for token in trigram[bigram[texts[idx]]]:
+            if token.count('_') == 2:
+                texts[idx].append(token)
 
     return texts
 
