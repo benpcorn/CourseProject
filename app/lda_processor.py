@@ -23,10 +23,8 @@ nlp = spacy.load('en_core_web_sm')
 
 parser = English()
 en_stop = nltk.corpus.stopwords.words('english')
-en_stop.extend(['camera', 'doorbell', 'system', 'connect', 'base', 'station', 'arlo', 'ring', 'like', 'say']) #remove product specific words
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
-
 
 def tokenize(text):
     lda_tokens = []
@@ -58,7 +56,7 @@ def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
 
 def sent_to_words(sentences):
     for sentence in sentences:
-        yield(gensim.utils.simple_preprocess(str(sentence), deacc=True))  # deacc=True removes punctuations
+        yield(gensim.utils.simple_preprocess(str(sentence), deacc=True))
 
 def remove_stopwords(texts):
     cleaned = [[word for word in gensim.utils.simple_preprocess(str(doc)) if word not in en_stop] for doc in texts]
@@ -66,7 +64,6 @@ def remove_stopwords(texts):
     return words
 
 def make_grams(texts):
-    dictionary = corpora.Dictionary(texts)
     bigram = Phrases(texts, min_count=20)
     # trigram = Phrases(bigram[texts], min_count=len(texts)*.05)
     for idx in range(len(texts)):

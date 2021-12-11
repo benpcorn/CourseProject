@@ -26,12 +26,9 @@ def scraper_api():
         record = table.search(Product.asin == payload["asin"])
         if len(record) > 0: 
             logging.info("Record: {}".format(record[-1].doc_id))
-        if len(record) != 0 and "force" not in payload.keys():
-            # Return the existing data we have
-            logging.info("Found existing record for: {}, returning results.".format(payload["asin"]))
-            return jsonify(record[-1])
-        elif len(record) != 0 and len(record[-1]["topics"]) == 0 and "force" not in payload.keys():
-            # Kick off LDA processing
+
+        if len(record) != 0 and len(record[-1]["topics"]) == 0 and "force" not in payload.keys():
+            # Kick off LDA processing if we have reviews, but no topics.
             logging.info("Starting LDA processor on existing review data for: {}".format(payload["asin"]))
             reviews = record['reviews']
             thread = Thread(target=lda_processor.generate_text_data_from_record, args=(reviews,payload["asin"],record['product_title'],))
@@ -39,6 +36,10 @@ def scraper_api():
             thread.start()
             return jsonify({'thread_name': str(thread.name),
                             'started': True})
+        elif len(record) != 0 and "force" not in payload.keys():
+            # Return the existing data we have
+            logging.info("Found existing record for: {}, returning results.".format(payload["asin"]))
+            return jsonify(record[-1])
         else:
             # Kick off scraping
             logging.info("Starting Scrape processor for: {}".format(payload["asin"]))

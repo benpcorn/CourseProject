@@ -22,6 +22,7 @@ chrome.extension.sendMessage({}, function(response) {
 const handleAnalyze = async e => {
 	// OnClick Handler for Analyze Button on DP
 	e.preventDefault();
+
 	forceAnalysis(getASINFromPage())
 	console.log(getASINFromPage())
 }
@@ -61,6 +62,7 @@ const forceAnalysis = async ASIN => {
 	
 	fetch(url, options)
 		.then(response => response.json())
+		.then(data => showMessage(data));
 };
 
 const showTopics = async e => {
@@ -72,7 +74,7 @@ const showTopics = async e => {
 
 const showMessage = async e => {
 	var analyzerDiv = document.getElementById("analyzer-div")
-	analyzerDiv.insertAdjacentText("afterEnd", e)
+	analyzerDiv.insertAdjacentText("Processing started... reload page after some time.")
 }
 
 function getASINFromPage() {

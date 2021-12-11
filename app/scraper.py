@@ -93,7 +93,7 @@ def get_reviews_by_asin(asin, method="proxy"):
 
     product_title = soup.title.string.replace("Amazon.com: Customer reviews: ", "")
 
-    write_reviews_to_file(reviews, asin + ".txt")
+    #write_reviews_to_file(reviews, asin + ".txt")
     write_reviews_to_db(reviews, asin, product_title)
 
     return reviews
