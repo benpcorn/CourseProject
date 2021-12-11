@@ -65,7 +65,8 @@ Due to the compute resources needed for this solution and the desire to provide 
 
 ### How to Install
 
-Start by cloning this repository.
+1. This deployment requires Python 3.10+. I'd recommend using Conda (Anaconda / Miniconda) to save yourself frustration when managing multiple Python versions and libraries. You can quickly install Miniconda with their installers for MacOS and Windows: https://docs.conda.io/en/latest/miniconda.html (hint: use .pkg on MacOS for faster install).
+2. Clone this repository to your machine.
 
 #### Python Project
     conda create --name env-name python=3.10
