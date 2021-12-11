@@ -166,11 +166,11 @@ The topic quality varies greatly based on the particular product and review data
 ### Google Chrome Extension Implementation (inject.js)
 Extensionizr was used to create boilerplate Google Chrome extension code, however most of it was not utilized in this MVP project iteration. The boilerplate code enables a fast way to add a settings menu to the extension, which will be handy when enabling customers to set hyperparameters used in the scraping and processing jobs such as max number of pages/reviews to scrape, max number of topics, number of words per topics, and other parameters used with Gensim LDA.
 
-The extension is handled in `inject.js`. The original intent was to make the extension feel like a native part of the Amazon page, so a new DOM element is created that matches the styling of an existing Amazon DOM element. Because the Amazon page uses lazy loading, a check is done on an interval `var readyStateCheckInterval = setInterval(function()` until the DOM element ID that is copied, is found on the page: `if (document.getElementById('cm_cr_dp_d_write_review'))`. Once found, the element is cloned `reviewDiv.cloneNode(true);` and the title and subtext are modified to look like this:
+The extension business logic is handled in `inject.js`. The original intent was to make the extension feel like a native part of the Amazon page, so a new DOM element is created that matches the styling of an existing Amazon DOM element. Because the Amazon page uses lazy loading, a check is done on an interval `var readyStateCheckInterval = setInterval(function()` until the DOM element ID that is copied, is found on the page: `if (document.getElementById('cm_cr_dp_d_write_review'))`. Once found, the element is cloned `reviewDiv.cloneNode(true);` and the title and subtext are modified to look like this:
 
 ![alt text](https://user-images.githubusercontent.com/73569064/145688835-d976edb3-4e4f-435f-bd46-0029ee35101e.png)
 
-A request is made to the Flask `/scrape` endpoint by passing in the ASIN from the product page `const retrieveAnalysis = async ASIN => {` on page load. If reviews and topics already exist, they are rendered in a table. Otherwise a scrape job is kicked off automatically, and then a subsequent processor job is run. After some time, refreshing the page will render the topics in a table (see image above as example).
+When the div mentioned above loads, a request is automatically made to the Flask `/scrape` endpoint by passing in the ASIN from the product page `const retrieveAnalysis = async ASIN => {` on page load. If reviews and topics already exist for the product, they are rendered in a table. Otherwise a scrape job is kicked off automatically, and then a subsequent processor job is run. After some time, refreshing the page will render the topics in a table (see image above as example) - for now, the best way to do this is to have your logs running to view the progress of the scrape and processing job.
 
 Selecting the "Analyze" button will fire the `const forceAnalysis = async ASIN => {` method with the `force` request parameter, forcing the scraper to generate new review results.
 
@@ -202,5 +202,5 @@ Option 2:
 
 ### How to Generate Results
 
-Option 1: Use the `/scrape' endpoint and an ASIN of your choosing.
-Option 2: Use the Chrome extension to kick off the requests.
+Option 1: Use the `/scrape' endpoint and an ASIN of your choosing. Hit the endpoint again after watching the Python logs show scrape completion to review the results.
+Option 2: Use the Chrome extension to kick off the requests by navigating to a product page. After some time (and checking the Python logs to ensure scrape/process completion, refresh the page to find the topics displayed as a table in the review section of the page.
