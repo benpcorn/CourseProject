@@ -63,9 +63,27 @@ Due to the compute resources needed for this solution and the desire to provide 
 <sup>[1]</sup> https://spiegel.medill.northwestern.edu/online-reviews/
 <sup>[2]</sup> https://www.powerreviews.com/wp-content/uploads/2016/04/PowerofReviews_2016.pdf
 
+### How to Install
+
+Start by cloning this repository.
+
+#### Python Project
+    conda create --name env-name python=3.10
+    conda activate env-name
+    pip install .
+    
+#### Extension
+1. From Google Chrome, chrome://extensions/
+2. Click "Load unpacked"
+3. Select the extension folder
+
 ### How to Run
 From the app folder, run the following command to start Flask on localhost:5000
 
+Option 1:
+    ./run.sh
+    
+Option 2:
     FLASK_APP=app.py FLASK_ENV=development flask run
 
 #### Start Scrape Job
