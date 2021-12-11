@@ -1,6 +1,6 @@
 # Amazon Review Analyzer
 
-Amazon Review Analyzer (ARA) is a Python tool to scrape, process, and analyze product reviews on Amazon.com to generate common topics your customers are talking about. It scrapes every review, stores them in a lightweight database, and applies an LDA topic model to generate topic keywords.
+Amazon Review Analyzer (ARA) is a Python based RESTful API (with optional Chrome extension) to scrape, process, and analyze product reviews on Amazon.com to generate common topics your customers are talking about. It scrapes every review, stores them in a lightweight database, and applies an LDA topic model to generate topic keywords.
 
 ### Implementation Overview
 
