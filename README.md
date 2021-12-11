@@ -2,6 +2,9 @@
 
 Amazon Review Analyzer (ARA) is a Python based RESTful API (with optional Chrome extension) to scrape, process, and analyze product reviews on Amazon.com to generate common topics your customers are talking about. It scrapes every review, stores them in a lightweight database, and applies an LDA topic model to generate topic keywords.
 
+### Software Usage Tutorial Presentation
+https://www.youtube.com/watch?v=modLkilqF_U
+
 ### Implementation Overview
 
 1. Flask API: ARA runs a lightweight Flask server with two REST API endpoints: `scrape` which scrapes reviews and inserts them to a record in `tinydb` and `process` which runs Gensim's LDA topic modelling on those reviews to generate topics.
