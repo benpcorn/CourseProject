@@ -175,7 +175,7 @@ The limitation of this extension is that the current state of the jobs are not d
 
 ### How to Install
 
-1. This deployment requires Python 3.10+. I'd recommend using Conda (Anaconda / Miniconda) to save yourself frustration when managing multiple Python versions and libraries. You can quickly install Miniconda with their installers for MacOS and Windows: https://docs.conda.io/en/latest/miniconda.html (hint: use .pkg on MacOS for faster install).
+1. This deployment requires Python 3.10+. It is recommend to use Conda (Anaconda / Miniconda) to save yourself frustration when managing multiple Python versions and libraries. You can quickly install Miniconda with their installers for MacOS and Windows: https://docs.conda.io/en/latest/miniconda.html (hint: use .pkg on MacOS for faster install).
 2. Clone this repository to your machine.
 
 #### Python Project
