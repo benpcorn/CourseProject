@@ -5,12 +5,8 @@ import math
 import proxy as proxy
 import lda_processor
 from threading import Thread
-from numpy import random
-from time import sleep
 from bs4 import BeautifulSoup
 from tinydb import TinyDB, Query
-
-from requests.api import head
 
 db = TinyDB('./db.json')
 table = db.table('product_reviews')
@@ -66,21 +62,14 @@ def get_review_page_count(review_count, reviews_per_page):
     return page_count
 
 def get_reviews_by_asin(asin, method="proxy"):
-    logging.info("Starting scrape job for ASIN: ".format(asin))
-    record = {
-        'asin': asin,
-        'reviews': [],
-        'status': 'Scraping Started',
-        'topics': [],
-        'pretty_topics': []
-    }
-    table.insert(record)
+    logging.info("Starting scrape job for ASIN: {}".format(asin))
     req_url = build_request_url(asin, 1)
     if method == "proxy":
         page = proxy.request_page_with_proxy(req_url)["html"]
     else:
         page = get_page(req_url)
     soup = get_soup_from_page(page, "raw")
+
     review_count = get_global_review_count(soup)
     review_page_count = get_review_page_count(review_count, 10)
     review_divs = []
@@ -102,8 +91,10 @@ def get_reviews_by_asin(asin, method="proxy"):
     for div in review_divs:
         reviews.append(div.get_text(strip=True))
 
+    product_title = soup.title.string.replace("Amazon.com: Customer reviews: ", "")
+
     write_reviews_to_file(reviews, asin + ".txt")
-    write_reviews_to_db(reviews, asin)
+    write_reviews_to_db(reviews, asin, product_title)
 
     return reviews
 
@@ -114,19 +105,19 @@ def write_reviews_to_file(reviews, file_name):
         textfile.write(review + "\n")
     textfile.close()
 
-def write_reviews_to_db(reviews, asin):
+def write_reviews_to_db(reviews, asin, product_title):
     logging.info("Writing reviews to DB.")
     record = {
         'asin': asin,
         'reviews': reviews,
         'status': 'Scraping Done',
         'topics': [],
-        'pretty_topics': []
+        'pretty_topics': [],
+        'product_title': product_title
     }
-    Product = Query()
-    table.update(record, Product.asin == asin)
+    table.insert(record)
 
-    logging.info("Reviews written to DB record. Starting LDA processor now.")
-    thread = Thread(target=lda_processor.generate_text_data_from_record, args=(reviews,asin,))
+    logging.info("Product review record written to DB: {}. Starting LDA processor now.".format(record))
+    thread = Thread(target=lda_processor.generate_text_data_from_record, args=(reviews,asin,product_title,))
     thread.daemon = True
     thread.start()

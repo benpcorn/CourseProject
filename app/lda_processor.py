@@ -90,8 +90,9 @@ def generate_text_data_from_file(file_name):
     data_grams = make_grams(data_lemmatized)
     return data_grams
 
-def generate_text_data_from_record(texts, asin):
+def generate_text_data_from_record(texts, asin, product_title):
     table.clear_cache()
+    en_stop.extend(gensim.utils.simple_preprocess(str(product_title)))
     data_words = list(sent_to_words(texts))
     data_words_nostops = remove_stopwords(data_words)
     data_lemmatized = lemmatization(data_words_nostops, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])

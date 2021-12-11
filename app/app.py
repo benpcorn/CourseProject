@@ -34,7 +34,7 @@ def scraper_api():
             # Kick off LDA processing
             logging.info("Starting LDA processor on existing review data for: {}".format(payload["asin"]))
             reviews = record['reviews']
-            thread = Thread(target=lda_processor.generate_text_data_from_record, args=(reviews,payload["asin"],))
+            thread = Thread(target=lda_processor.generate_text_data_from_record, args=(reviews,payload["asin"],record['product_title'],))
             thread.daemon = True
             thread.start()
             return jsonify({'thread_name': str(thread.name),
@@ -58,12 +58,19 @@ def processor_api():
 
         if len(record) and len(record["topics"]) == 0:
             reviews = record['reviews']
-            thread = Thread(target=lda_processor.generate_text_data_from_record, args=(reviews,payload["asin"],))
+            thread = Thread(target=lda_processor.generate_text_data_from_record, args=(reviews,payload["asin"],record['product_title'],))
             thread.daemon = True
             thread.start()
             return jsonify({'thread_name': str(thread.name),
                             'started': True})
-        elif len(record["topics"]) > 0:
+        elif len(record) and len(record["topics"]) > 0 and "force" in payload.keys():
+            reviews = record['reviews']
+            thread = Thread(target=lda_processor.generate_text_data_from_record, args=(reviews,payload["asin"],record['product_title'],))
+            thread.daemon = True
+            thread.start()
+            return jsonify({'thread_name': str(thread.name),
+                            'started': True})
+        elif len(record) and len(record["topics"]) > 0:
             return jsonify(record)
         else:
             return jsonify({'status': 'failed', 'reason': 'Product reviews not found.'})
