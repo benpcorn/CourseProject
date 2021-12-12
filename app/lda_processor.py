@@ -25,6 +25,7 @@ parser = English()
 en_stop = nltk.corpus.stopwords.words('english')
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
+logging.getLogger("gensim").setLevel(logging.ERROR)
 
 def tokenize(text):
     lda_tokens = []

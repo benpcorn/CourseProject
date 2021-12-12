@@ -80,7 +80,7 @@ def get_reviews_by_asin(asin, method="proxy"):
     try:
         req_url = build_request_url(asin, 1)
         if method == "proxy":
-            page = proxy.request_page_with_proxy(req_url)
+            page = proxy.request_page_with_proxy_2(req_url)
 
             if page["status_code"] != 200:
                 logging.error("{}".format(page["error"]))
@@ -96,7 +96,7 @@ def get_reviews_by_asin(asin, method="proxy"):
         for page in range(1, review_page_count + 1):
             if page > 1:
                 req_url = build_request_url(asin, page)
-                page_content = proxy.request_page_with_proxy(req_url)
+                page_content = proxy.request_page_with_proxy_2(req_url)
 
                 if page_content["status_code"] != 200:
                     logging.error("{}".format(page_content["error"]))
@@ -123,7 +123,7 @@ def get_reviews_by_asin(asin, method="proxy"):
                 logging.info("Reached the last review page.")
                 break
             
-            time.sleep(0.500)
+            #time.sleep(1)
 
         product_title = soup.title.string.replace("Amazon.com: Customer reviews: ", "")
 
